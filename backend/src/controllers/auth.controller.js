@@ -56,7 +56,18 @@ async function loginUser(req, res) {
         message: "Invalid Password",
       });
     }
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "15m",
+      },
+    );
+
+    const refreshToken = jwt.sign(
       {
         id: user._id,
         role: user.role,
@@ -67,11 +78,18 @@ async function loginUser(req, res) {
       },
     );
 
-    res.cookie("token", token, {
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", //or secure: true
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", //or sameSite: "strict" or sameSite: "none" (if you want to allow cross-site cookies)
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", //or secure: true
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", //or sameSite: "strict" or sameSite: "none" (if you want to allow cross-site cookies)
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/api/auth/refresh-token", // Set the path for the refresh token cookie
     });
 
     res.status(200).json({
@@ -82,11 +100,70 @@ async function loginUser(req, res) {
         email: user.email,
         role: user.role,
       },
+      accessToken,
     });
   } catch (error) {
     console.log(error);
     res.status(500).json({
       message: "Internal Server Error",
+    });
+  }
+}
+
+async function refreshToken(req, res) {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({
+        message: "Authentication Required",
+      });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const newAccessToken = jwt.sign(
+      {
+        id: decoded.id,
+        role: decoded.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "15m",
+      },
+    );
+
+    const newRefreshToken = jwt.sign(
+      {
+        id: decoded.id,
+        role: decoded.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", //or secure: true
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", //or sameSite: "strict" or sameSite: "none" (if you want to allow cross-site cookies)
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", //or secure: true
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", //or sameSite: "strict" or sameSite: "none" (if you want to allow cross-site cookies)
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/api/auth/refresh-token", // Set the path for the refresh token cookie
+    });
+
+    res.status(200).json({
+      message: "Token Refreshed Successfully",
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      message: "Invalid or Expired Refresh Token",
     });
   }
 }
@@ -98,4 +175,4 @@ async function logoutUser(req, res) {
   });
 }
 
-module.exports = { registerUser, loginUser, logoutUser };
+module.exports = { registerUser, loginUser, refreshToken, logoutUser };

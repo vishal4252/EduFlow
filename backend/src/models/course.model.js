@@ -4,23 +4,23 @@ const courseSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: true,
+      required: [true, "Title is required"],
       trim: true,
     },
     description: {
       type: String,
-      required: true,
+      required: [true, "Description is required"],
       trim: true,
     },
     category: {
       type: String,
-      required: true,
+      required: [true, "Category is required"],
       trim: true,
     },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
-      required: true,
+      required: [true, "Instructor is required"],
     },
     students: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
   },
