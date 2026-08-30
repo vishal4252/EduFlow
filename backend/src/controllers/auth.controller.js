@@ -348,7 +348,6 @@ async function logoutAll(req, res) {
     }
 
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-    console.log(decoded);
     await sessionModel.updateMany(
       {
         user: decoded.id,
