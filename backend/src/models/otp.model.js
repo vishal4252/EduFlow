@@ -1,0 +1,27 @@
+const mongoose = require("mongoose");
+
+const otpSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User is required"],
+    },
+    otp: {
+      type: String,
+      required: [true, "OTP is required"],
+    },
+    expiresAt: {
+      type: Date,
+      required: [true, "Expiration time is required"],
+    },
+  },
+  { timestamps: true },
+);
+
+const otpModel = mongoose.model("Otp", otpSchema);
+module.exports = otpModel;

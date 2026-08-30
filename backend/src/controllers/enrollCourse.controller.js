@@ -44,7 +44,7 @@ async function enrollStudent(req, res) {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
@@ -74,7 +74,7 @@ async function getEnrolledCourses(req, res) {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }

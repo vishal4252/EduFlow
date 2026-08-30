@@ -41,7 +41,7 @@ async function createCourse(req, res) {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
@@ -107,7 +107,7 @@ async function updateCourse(req, res) {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
@@ -148,7 +148,7 @@ async function updateInstructor(req, res) {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
@@ -165,7 +165,7 @@ async function getAllCourses(req, res) {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
@@ -195,7 +195,7 @@ async function getCourseById(req, res) {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
