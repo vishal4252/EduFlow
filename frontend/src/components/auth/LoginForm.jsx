@@ -36,6 +36,7 @@ export default function LoginForm() {
 
     try {
       const data = await loginUser(formData);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       console.log("Login Response:", data);
 

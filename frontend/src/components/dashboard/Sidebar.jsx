@@ -155,6 +155,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     onClick={async () => {
                       try {
                         setLoggingOut(true);
+                        localStorage.removeItem("user");
 
                         await logoutUser();
 
@@ -177,6 +178,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         setLoggingOutAll(true);
 
                         await logoutAll();
+                        localStorage.removeItem("user");
 
                         router.push("/login");
                       } catch (error) {
