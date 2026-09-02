@@ -18,7 +18,7 @@ async function createCourse(req, res) {
 
     const result = await validateInstructor(instructor);
     if (!result.valid) {
-      res.status(result.status).json({
+      return res.status(result.status).json({
         message: result.message,
       });
     }

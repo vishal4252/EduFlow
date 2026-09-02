@@ -12,7 +12,7 @@ router.post(
 );
 
 router.get(
-  "/courses/:courseId/assignment",
+  "/courses/:courseId/assignments",
   authMiddleware.authMiddleware,
   roleMiddleware.authorizeRole("admin", "teacher", "student"),
   assignmentController.getAssignment,
