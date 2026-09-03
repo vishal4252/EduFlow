@@ -1,16 +1,19 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   BookOpen,
+  LibraryBig,
   ClipboardList,
   BarChart3,
   Settings,
   LogOut,
   X,
   ChevronUp,
+  Users,
+  GraduationCap,
 } from "lucide-react";
 
 import { logoutUser, logoutAll } from "@/services/auth.service";
@@ -18,15 +21,51 @@ export default function Sidebar({ isOpen, onClose }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const [user] = useState(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
   const [loggingOut, setLoggingOut] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
   const [logoutMenuOpen, setLogoutMenuOpen] = useState(false);
 
-  const menuItems = [
+  const adminMenuItems = [
     {
       name: "Dashboard",
       icon: LayoutDashboard,
       path: "/dashboard",
+    },
+    {
+      name: "All Courses",
+      icon: LibraryBig,
+      path: "/allcourses",
+    },
+    {
+      name: "All Teachers",
+      icon: Users,
+      path: "/allteachers",
+    },
+    {
+      name: "All Students",
+      icon: GraduationCap,
+      path: "/allstudents",
+    },
+  ];
+
+  const studentMenuItems = [
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/dashboard",
+    },
+    {
+      name: "All Courses",
+      icon: LibraryBig,
+      path: "/allcourses",
     },
     {
       name: "My Courses",
@@ -44,6 +83,8 @@ export default function Sidebar({ isOpen, onClose }) {
       path: "/progress",
     },
   ];
+
+  const menuItems = user?.role === "admin" ? adminMenuItems : studentMenuItems;
 
   return (
     <>

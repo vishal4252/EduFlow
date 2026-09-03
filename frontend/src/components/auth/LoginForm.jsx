@@ -38,13 +38,9 @@ export default function LoginForm() {
       const data = await loginUser(formData);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      console.log("Login Response:", data);
-
       // Login successful
       router.push("/dashboard");
     } catch (error) {
-      console.log(error);
-
       setError(
         error.response?.data?.message ||
           "Something went wrong. Please try again.",

@@ -113,6 +113,30 @@ async function updateCourse(req, res) {
   }
 }
 
+async function deleteCourse(req, res) {
+  try {
+    const courseId = req.params.courseId;
+    const course = await courseModel.findOne({ _id: courseId });
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found",
+      });
+    }
+
+    await courseModel.deleteOne({ _id: courseId });
+
+    res.status(200).json({
+      message: "Course deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
+
 async function updateInstructor(req, res) {
   try {
     const courseId = req.params.courseId;
@@ -204,6 +228,7 @@ async function getCourseById(req, res) {
 module.exports = {
   createCourse,
   updateCourse,
+  deleteCourse,
   updateInstructor,
   getAllCourses,
   getCourseById,

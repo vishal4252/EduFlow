@@ -11,3 +11,27 @@ export const getCourseById = async (courseId) => {
   const response = await api.get(`api/courses/${courseId}`);
   return response.data;
 };
+
+// api/courses for fetching all courses for admin and student only
+export const getAllCourses = async () => {
+  const response = await api.get("api/courses");
+  return response.data;
+};
+
+// api/courses is for student only to enroll in a course
+export const enrollCourse = async (courseId) => {
+  const response = await api.post(`courses/${courseId}/enroll`);
+  return response.data;
+};
+
+// api/courses/:courseId is for admin only to update course details
+export const updateCourse = async (courseId, CourseData) => {
+  const response = await api.put(`api/courses/${courseId}`, CourseData);
+  return response.data;
+};
+
+// api/courses/:courseId is for admin only to delete a course
+export const deleteCourse = async (courseId) => {
+  const response = await api.delete(`api/courses/${courseId}`);
+  return response.data;
+};

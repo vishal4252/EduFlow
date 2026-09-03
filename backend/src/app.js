@@ -6,6 +6,7 @@ const authRouter = require("./routes/auth.route");
 const courseRouter = require("./routes/course.router");
 const enrollCourseRouter = require("./routes/enrollCourse.router");
 const assignmentRouter = require("./routes/assignment.route");
+const userRouter = require("./routes/user.route");
 
 const app = express();
 app.use(
@@ -29,5 +30,6 @@ app.use("/api/auth", authRouter);
 app.use("/api", courseRouter);
 app.use("/", enrollCourseRouter);
 app.use("/", assignmentRouter);
+app.use("/users", userRouter);
 
 module.exports = app;

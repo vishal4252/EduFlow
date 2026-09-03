@@ -26,10 +26,17 @@ router.put(
   courseController.updateCourse,
 );
 
+router.delete(
+  "/courses/:courseId",
+  authMiddelware.authMiddleware,
+  roleMiddleware.authorizeRole("admin"),
+  courseController.deleteCourse,
+);
+
 router.get(
   "/courses",
   authMiddelware.authMiddleware,
-  roleMiddleware.authorizeRole("admin"),
+  roleMiddleware.authorizeRole("admin", "student"),
   courseController.getAllCourses,
 );
 

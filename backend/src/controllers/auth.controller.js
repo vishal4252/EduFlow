@@ -124,19 +124,29 @@ async function loginUser(req, res) {
     });
     if (!user) {
       return res.status(401).json({
+        success: false,
         message: "Invalid Credential or User Not Found",
+      });
+    }
+
+    if (user.isDeleted) {
+      return res.status(403).json({
+        success: false,
+        message: "Account has been deleted",
       });
     }
 
     const verifyPassword = await bcrypt.compare(password, user.password);
     if (!verifyPassword) {
       return res.status(401).json({
+        success: false,
         message: "Invalid Password",
       });
     }
 
     if (!user.verified) {
       return res.status(401).json({
+        success: false,
         message: "Email Not Verified",
       });
     }
