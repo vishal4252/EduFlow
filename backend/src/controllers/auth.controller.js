@@ -202,7 +202,7 @@ async function loginUser(req, res) {
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Login Successfully",
       user: {
         id: user.id,

@@ -39,6 +39,48 @@ async function getAllStudents(req, res) {
   }
 }
 
+async function updateUserRole(req, res) {
+  try {
+    const userId = req.params.userId;
+    const { role } = req.body;
+
+    const validRoles = ["student", "teacher"];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role specified",
+      });
+    }
+
+    const user = await userModel
+      .findById(userId)
+      .select("-password -createdAt -updatedAt -__v");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    user.role = role;
+    await user.save();
+
+    // Delete all sessions associated with the user when their role is updated
+    await sessionModel.deleteMany({ user: user._id });
+
+    return res.status(200).json({
+      success: true,
+      message: "User role updated successfully",
+      data: user,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Error updating user role",
+      error: err.message,
+    });
+  }
+}
+
 async function deleteUser(req, res) {
   try {
     const userId = req.params.userId;
@@ -71,5 +113,6 @@ async function deleteUser(req, res) {
 module.exports = {
   getAllTeachers,
   getAllStudents,
+  updateUserRole,
   deleteUser,
 };

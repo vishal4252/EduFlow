@@ -26,7 +26,7 @@ transporter.verify((error, success) => {
 exports.sendEmail = async (to, subject, text, html) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Your Name" <${process.env.GOOGLE_USER}>`, // sender address
+      from: `"EduFlow Support" <${process.env.GOOGLE_USER}>`, // sender address
       to, // list of receivers
       subject, // Subject line
       text, // plain text body

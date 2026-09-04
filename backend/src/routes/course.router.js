@@ -36,7 +36,7 @@ router.delete(
 router.get(
   "/courses",
   authMiddelware.authMiddleware,
-  roleMiddleware.authorizeRole("admin", "student"),
+  roleMiddleware.authorizeRole("admin", "teacher", "student"),
   courseController.getAllCourses,
 );
 

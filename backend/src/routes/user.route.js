@@ -19,6 +19,13 @@ router.get(
   userController.getAllStudents,
 );
 
+router.put(
+  "/:userId",
+  authMiddelware.authMiddleware,
+  roleMiddleware.authorizeRole("admin"),
+  userController.updateUserRole,
+);
+
 router.delete(
   "/:userId",
   authMiddelware.authMiddleware,
