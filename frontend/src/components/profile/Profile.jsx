@@ -4,10 +4,15 @@ import { useState } from "react";
 import { User, Mail, ShieldCheck, BadgeCheck } from "lucide-react";
 
 export default function Profile() {
-  const [user] = useState(() => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   if (!user) {
     return (

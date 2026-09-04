@@ -22,15 +22,15 @@ export default function Sidebar({ isOpen, onClose }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [user] = useState(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
+  const [user, setUser] = useState(null);
 
+  useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const [loggingOut, setLoggingOut] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
