@@ -19,6 +19,11 @@ app.use(express.json());
 app.use(cookiesParser());
 app.use(morgan("dev"));
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "EduFlow backend is running",
+  });
+});
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
