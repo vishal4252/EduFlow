@@ -31,8 +31,6 @@ export default function CourseDetails() {
 
         setCourse(data.course);
       } catch (error) {
-        console.error(error);
-
         setError(error.response?.data?.message || "Failed to fetch course");
       } finally {
         setLoading(false);
@@ -54,8 +52,6 @@ export default function CourseDetails() {
 
         setAssignments(data.assignments || []);
       } catch (error) {
-        console.error(error);
-
         setAssignmentError(
           error.response?.data?.message || "Failed to fetch assignments",
         );

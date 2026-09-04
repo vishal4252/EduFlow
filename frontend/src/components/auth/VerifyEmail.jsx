@@ -53,12 +53,10 @@ export default function VerifyEmail() {
     setLoading(true);
 
     try {
-      const data = await verifyEmail({
+      await verifyEmail({
         email,
         otp,
       });
-
-      console.log("Verify Email Response:", data);
 
       setSuccess("Email verified successfully!");
 
@@ -66,8 +64,6 @@ export default function VerifyEmail() {
         router.push("/login");
       }, 1000);
     } catch (error) {
-      console.log(error);
-
       setError(
         error.response?.data?.message ||
           "Unable to verify OTP. Please try again.",

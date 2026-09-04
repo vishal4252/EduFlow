@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
   X,
+  Plus,
 } from "lucide-react";
 
 import {
@@ -264,6 +265,17 @@ export default function AllCourses() {
               Explore available courses and start learning.
             </p>
           </div>
+
+          {user?.role === "admin" && (
+            <button
+              type="button"
+              onClick={() => router.push("/createcourse")}
+              className="inline-flex items-center justify-center mb-5 gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              <Plus size={17} />
+              Create Course
+            </button>
+          )}
 
           {/* Error */}
           {error && (

@@ -24,8 +24,6 @@ export default function MyCourses() {
 
         setCourses(data.enrolledCourses || []);
       } catch (error) {
-        console.error(error);
-
         setError(error.response?.data?.message || "Failed to fetch courses");
       } finally {
         setLoading(false);

@@ -1,10 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen } from "lucide-react";
-
 export default function RecentCourses({ courses = [], loading, error }) {
   const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
 
   const recentCourses = [...courses]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -26,7 +39,11 @@ export default function RecentCourses({ courses = [], loading, error }) {
 
         <button
           type="button"
-          onClick={() => router.push("/courses")}
+          onClick={() =>
+            router.push(
+              `${user?.role === "admin" ? "/allcourses" : "/courses"}`,
+            )
+          }
           className="text-sm font-medium text-slate-700 transition hover:text-slate-900 hover:underline"
         >
           View all
@@ -69,7 +86,7 @@ export default function RecentCourses({ courses = [], loading, error }) {
           </p>
 
           <p className="mt-1 text-xs text-slate-500">
-            You haven't enrolled in any courses yet.
+            You haven&lsquo;t enrolled in any courses yet.
           </p>
         </div>
       )}

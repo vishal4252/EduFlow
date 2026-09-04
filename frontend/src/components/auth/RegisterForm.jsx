@@ -35,13 +35,9 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
-      const data = await registerUser(formData);
-
-      console.log("Register Response:", data);
+      await registerUser(formData);
       router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
     } catch (error) {
-      console.log(error);
-
       setError(
         error.response?.data?.message ||
           "Something went wrong. Please try again.",

@@ -13,7 +13,11 @@ import {
   X,
 } from "lucide-react";
 
-import { getAllStudents, deleteUser } from "@/services/user.service";
+import {
+  getAllStudents,
+  deleteUser,
+  updateUserRole,
+} from "@/services/user.service";
 
 export default function AllStudents() {
   const router = useRouter();
@@ -26,6 +30,7 @@ export default function AllStudents() {
 
   const [deletingStudent, setDeletingStudent] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [updatingRoleId, setUpdatingRoleId] = useState(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -59,6 +64,27 @@ export default function AllStudents() {
         student.email?.toLowerCase().includes(value),
     );
   }, [students, search]);
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      setUpdatingRoleId(userId);
+
+      const data = await updateUserRole(userId, newRole);
+
+      // Remove student from current list because role changed
+      setStudents((prevStudents) =>
+        prevStudents.filter((student) => student._id !== userId),
+      );
+
+      toast.success(data.message || "User role updated successfully");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update user role",
+      );
+    } finally {
+      setUpdatingRoleId(null);
+    }
+  };
 
   const handleDeleteStudent = async () => {
     if (!deletingStudent) return;
@@ -188,17 +214,18 @@ export default function AllStudents() {
                 <span>Student</span>
                 <span>Email</span>
                 <span>Status</span>
+                <span>Role</span>
                 <span />
               </div>
 
               <div className="divide-y divide-slate-100">
                 {filteredStudents.map((student) => {
-                  const isDeleting = deletingId === student.id;
+                  const isDeleting = deletingId === student._id;
 
                   return (
                     <div
-                      key={student.id}
-                      className="grid gap-4 px-5 py-5 md:grid-cols-[1.5fr_2fr_1fr_70px] md:items-center"
+                      key={student._id}
+                      className="grid gap-4 px-5 py-5 md:grid-cols-[1.5fr_2fr_1fr_1fr_70px] md:items-center"
                     >
                       {/* Student */}
                       <div className="flex items-center gap-4">
@@ -244,6 +271,23 @@ export default function AllStudents() {
                         >
                           {student.verified ? "Verified" : "Not Verified"}
                         </span>
+                      </div>
+
+                      {/* Role */}
+                      <div>
+                        <select
+                          value={student.role || "student"}
+                          onChange={(e) =>
+                            handleRoleChange(student._id, e.target.value)
+                          }
+                          disabled={
+                            updatingRoleId === student._id || isDeleting
+                          }
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium capitalize text-slate-700 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <option value="student">Student</option>
+                          <option value="teacher">Teacher</option>
+                        </select>
                       </div>
 
                       {/* Delete */}

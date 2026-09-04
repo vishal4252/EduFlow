@@ -7,14 +7,18 @@ import {
   Users,
   GraduationCap,
   ArrowRight,
-  UserPlus,
+  ClipboardList,
+  CalendarDays,
 } from "lucide-react";
 
 import StatsCard from "./StatsCard";
 import RecentCourses from "./RecentCourses";
 
 import { getMyCourses, getAllCourses } from "@/services/course.service";
+
 import { getAllTeachers, getAllStudents } from "@/services/user.service";
+
+import { getCourseAssignments } from "@/services/assignment.service";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -24,14 +28,17 @@ export default function Dashboard() {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
+  const [assignments, setAssignments] = useState([]);
 
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [loadingTeachers, setLoadingTeachers] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(true);
+  const [loadingAssignments, setLoadingAssignments] = useState(true);
 
   const [courseError, setCourseError] = useState("");
   const [teacherError, setTeacherError] = useState("");
   const [studentError, setStudentError] = useState("");
+  const [assignmentError, setAssignmentError] = useState("");
 
   // =====================================
   // GET LOGGED-IN USER
@@ -43,8 +50,8 @@ export default function Dashboard() {
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Invalid user data:", error);
+      } catch {
+        setUser(null);
       }
     }
   }, []);
@@ -71,13 +78,45 @@ export default function Dashboard() {
 
         setCourses(data.courses || []);
       } catch (error) {
-        console.error(error);
-
         setCourseError(
           error.response?.data?.message || "Failed to fetch courses",
         );
       } finally {
         setLoadingCourses(false);
+      }
+
+      // -------------------------------
+      // Assignments
+      // -------------------------------
+
+      try {
+        setLoadingAssignments(true);
+        setAssignmentError("");
+
+        // Fetch assignments for every course.
+        // GET /courses/:courseId/assignments returns assignments for one course.
+        const allCourses = data.courses || [];
+
+        if (allCourses.length === 0) {
+          setAssignments([]);
+        } else {
+          const responses = await Promise.all(
+            allCourses.map((course) => getCourseAssignments(course._id)),
+          );
+
+          const allAssignments = responses.flatMap(
+            (response) => response.assignments || [],
+          );
+
+          setAssignments(allAssignments);
+        }
+      } catch (error) {
+        setAssignments([]);
+        setAssignmentError(
+          error.response?.data?.message || "Failed to fetch assignments",
+        );
+      } finally {
+        setLoadingAssignments(false);
       }
 
       // -------------------------------
@@ -123,6 +162,49 @@ export default function Dashboard() {
   }, [user]);
 
   // =====================================
+  // ADMIN ALL ASSIGNMENTS
+  // =====================================
+
+  useEffect(() => {
+    if (user?.role !== "admin") {
+      return;
+    }
+
+    const fetchAdminAssignments = async () => {
+      if (courses.length === 0) {
+        setAssignments([]);
+        setLoadingAssignments(false);
+        setAssignmentError("");
+        return;
+      }
+
+      try {
+        setLoadingAssignments(true);
+        setAssignmentError("");
+
+        const responses = await Promise.all(
+          courses.map((course) => getCourseAssignments(course._id)),
+        );
+
+        const allAssignments = responses.flatMap(
+          (response) => response.assignments || [],
+        );
+
+        setAssignments(allAssignments);
+      } catch (error) {
+        setAssignments([]);
+        setAssignmentError(
+          error.response?.data?.message || "Failed to fetch assignments",
+        );
+      } finally {
+        setLoadingAssignments(false);
+      }
+    };
+
+    fetchAdminAssignments();
+  }, [user, courses]);
+
+  // =====================================
   // STUDENT DATA
   // =====================================
 
@@ -140,8 +222,6 @@ export default function Dashboard() {
 
         setCourses(data.enrolledCourses || []);
       } catch (error) {
-        console.error(error);
-
         setCourseError(
           error.response?.data?.message || "Failed to fetch courses",
         );
@@ -151,6 +231,122 @@ export default function Dashboard() {
     };
 
     fetchStudentCourses();
+  }, [user]);
+
+  // =====================================
+  // STUDENT ALL ASSIGNMENTS
+  // =====================================
+
+  useEffect(() => {
+    if (user?.role !== "student") {
+      return;
+    }
+
+    const fetchStudentAssignments = async () => {
+      // If student has no enrolled courses,
+      // there cannot be any course assignments.
+      if (courses.length === 0) {
+        setAssignments([]);
+        setLoadingAssignments(false);
+        setAssignmentError("");
+        return;
+      }
+
+      try {
+        setLoadingAssignments(true);
+        setAssignmentError("");
+
+        const responses = await Promise.all(
+          courses.map((course) => getCourseAssignments(course._id)),
+        );
+
+        const allAssignments = responses.flatMap(
+          (response) => response.assignments || [],
+        );
+
+        setAssignments(allAssignments);
+      } catch (error) {
+        setAssignmentError(
+          error.response?.data?.message || "Failed to fetch assignments",
+        );
+      } finally {
+        setLoadingAssignments(false);
+      }
+    };
+
+    fetchStudentAssignments();
+  }, [user, courses]);
+
+  // =====================================
+  // TEACHER DATA
+  // =====================================
+
+  useEffect(() => {
+    if (user?.role !== "teacher") {
+      return;
+    }
+
+    const fetchTeacherData = async () => {
+      try {
+        setLoadingCourses(true);
+        setLoadingAssignments(true);
+
+        setCourseError("");
+        setAssignmentError("");
+
+        // Get all courses
+        const data = await getAllCourses();
+
+        const allCourses = data.courses || [];
+
+        const teacherId = user.id || user._id;
+
+        // Only courses assigned to logged-in teacher
+        const assignedCourses = allCourses.filter((course) => {
+          const instructorId =
+            typeof course.instructor === "string"
+              ? course.instructor
+              : course.instructor?._id;
+
+          return instructorId === teacherId;
+        });
+
+        setCourses(assignedCourses);
+
+        // --------------------------------
+        // Get assignments for teacher courses
+        // --------------------------------
+
+        if (assignedCourses.length === 0) {
+          setAssignments([]);
+          setLoadingAssignments(false);
+          return;
+        }
+
+        const responses = await Promise.all(
+          assignedCourses.map((course) => getCourseAssignments(course._id)),
+        );
+
+        const allAssignments = responses.flatMap(
+          (response) => response.assignments || [],
+        );
+
+        setAssignments(allAssignments);
+      } catch (error) {
+        setCourseError(
+          error.response?.data?.message || "Failed to fetch teacher data",
+        );
+
+        setAssignmentError(
+          error.response?.data?.message || "Failed to fetch assignments",
+        );
+      } finally {
+        setLoadingCourses(false);
+        setLoadingAssignments(false);
+      }
+    };
+
+    fetchTeacherData();
   }, [user]);
 
   // =====================================
@@ -185,11 +381,17 @@ export default function Dashboard() {
           </div>
 
           {/* Stats */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatsCard
               title="Total Courses"
               value={loadingCourses ? "--" : courses.length}
               icon={BookOpen}
+            />
+
+            <StatsCard
+              title="Total Assignments"
+              value={loadingAssignments ? "--" : assignments.length}
+              icon={ClipboardList}
             />
 
             <StatsCard
@@ -206,7 +408,7 @@ export default function Dashboard() {
           </div>
 
           {/* Errors */}
-          {(courseError || teacherError || studentError) && (
+          {(courseError || teacherError || studentError || assignmentError) && (
             <div className="mt-6 space-y-2">
               {courseError && (
                 <p className="text-sm text-red-500">{courseError}</p>
@@ -218,6 +420,10 @@ export default function Dashboard() {
 
               {studentError && (
                 <p className="text-sm text-red-500">{studentError}</p>
+              )}
+
+              {assignmentError && (
+                <p className="text-sm text-red-500">{assignmentError}</p>
               )}
             </div>
           )}
@@ -327,6 +533,216 @@ export default function Dashboard() {
   }
 
   // =====================================
+  // TEACHER DASHBOARD
+  // =====================================
+
+  if (user.role === "teacher") {
+    return (
+      <div className="overflow-x-hidden p-4 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Welcome back 👋
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Manage your assigned courses and assignments.
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <StatsCard
+              title="Assigned Courses"
+              value={loadingCourses ? "--" : courses.length}
+              icon={BookOpen}
+            />
+
+            <StatsCard
+              title="Assignments"
+              value={loadingAssignments ? "--" : assignments.length}
+              icon={ClipboardList}
+            />
+          </div>
+
+          {/* Error */}
+          {(courseError || assignmentError) && (
+            <div className="mt-6 space-y-2">
+              {courseError && (
+                <p className="text-sm text-red-500">{courseError}</p>
+              )}
+
+              {assignmentError && (
+                <p className="text-sm text-red-500">{assignmentError}</p>
+              )}
+            </div>
+          )}
+
+          {/* Teacher Sections */}
+          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+            {/* Assigned Courses */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    My Assigned Courses
+                  </h2>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Courses assigned to you
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => router.push("/teacher/assignments")}
+                  className="text-sm font-medium text-slate-700 hover:underline"
+                >
+                  Assignments
+                </button>
+              </div>
+
+              {loadingCourses ? (
+                <div className="divide-y divide-slate-100">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="flex items-center gap-4 p-5">
+                      <div className="h-11 w-11 animate-pulse rounded-xl bg-slate-100" />
+
+                      <div className="flex-1">
+                        <div className="h-4 w-48 animate-pulse rounded bg-slate-100" />
+                        <div className="mt-2 h-3 w-28 animate-pulse rounded bg-slate-100" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : courses.length === 0 ? (
+                <div className="px-5 py-14 text-center">
+                  <BookOpen size={30} className="mx-auto text-slate-400" />
+
+                  <p className="mt-3 text-sm font-semibold text-slate-900">
+                    No assigned courses
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    No courses have been assigned to you yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {courses.slice(0, 3).map((course) => (
+                    <button
+                      key={course._id}
+                      type="button"
+                      onClick={() => router.push(`/courses/${course._id}`)}
+                      className="flex w-full items-center gap-4 p-5 text-left transition hover:bg-slate-50"
+                    >
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                        <BookOpen size={20} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                          {course.title}
+                        </p>
+
+                        <p className="mt-1 truncate text-xs text-slate-500">
+                          {course.category || "--"}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Assignments */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Recent Assignments
+                  </h2>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Assignments from your courses
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => router.push("/teacher/assignments")}
+                  className="text-sm font-medium text-slate-700 hover:underline"
+                >
+                  View all
+                </button>
+              </div>
+
+              {loadingAssignments ? (
+                <div className="divide-y divide-slate-100">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="flex items-center gap-4 p-5">
+                      <div className="h-11 w-11 animate-pulse rounded-xl bg-slate-100" />
+
+                      <div className="flex-1">
+                        <div className="h-4 w-48 animate-pulse rounded bg-slate-100" />
+                        <div className="mt-2 h-3 w-32 animate-pulse rounded bg-slate-100" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : assignments.length === 0 ? (
+                <div className="px-5 py-14 text-center">
+                  <ClipboardList size={30} className="mx-auto text-slate-400" />
+
+                  <p className="mt-3 text-sm font-semibold text-slate-900">
+                    No assignments
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    You haven&lsquo;t created any assignments yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {assignments.slice(0, 3).map((assignment) => (
+                    <div
+                      key={assignment._id}
+                      className="flex items-center gap-4 p-5"
+                    >
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                        <ClipboardList size={20} />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                          {assignment.title}
+                        </p>
+
+                        <p className="mt-1 truncate text-xs text-slate-500">
+                          {assignment.course?.title || "--"}
+                        </p>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-1.5 text-xs text-slate-500">
+                        <CalendarDays size={14} />
+
+                        {assignment.dueDate
+                          ? new Date(assignment.dueDate).toLocaleDateString()
+                          : "--"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================
   // STUDENT DASHBOARD
   // =====================================
 
@@ -352,7 +768,11 @@ export default function Dashboard() {
             icon={BookOpen}
           />
 
-          <StatsCard title="Assignments" value="--" icon={Users} />
+          <StatsCard
+            title="Assignments"
+            value={loadingAssignments ? "--" : assignments.length}
+            icon={ClipboardList}
+          />
 
           <StatsCard
             title="Learning Progress"

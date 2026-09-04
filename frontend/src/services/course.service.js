@@ -24,6 +24,12 @@ export const enrollCourse = async (courseId) => {
   return response.data;
 };
 
+// api/courses is for admin only to create a new course
+export const createCourse = async (CourseData) => {
+  const response = await api.post("api/courses", CourseData);
+  return response.data;
+};
+
 // api/courses/:courseId is for admin only to update course details
 export const updateCourse = async (courseId, CourseData) => {
   const response = await api.put(`api/courses/${courseId}`, CourseData);

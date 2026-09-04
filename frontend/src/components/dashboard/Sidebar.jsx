@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   LayoutDashboard,
   BookOpen,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { logoutUser, logoutAll } from "@/services/auth.service";
+
 export default function Sidebar({ isOpen, onClose }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -25,13 +26,20 @@ export default function Sidebar({ isOpen, onClose }) {
     if (typeof window === "undefined") {
       return null;
     }
+
     const storedUser = localStorage.getItem("user");
+
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
   const [loggingOut, setLoggingOut] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
   const [logoutMenuOpen, setLogoutMenuOpen] = useState(false);
+  const [error, setError] = useState("");
+
+  // =====================================
+  // ADMIN MENU
+  // =====================================
 
   const adminMenuItems = [
     {
@@ -54,7 +62,33 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: GraduationCap,
       path: "/allstudents",
     },
+    {
+      name: "All Assignments",
+      icon: ClipboardList,
+      path: "/allassignments",
+    },
   ];
+
+  // =====================================
+  // TEACHER MENU
+  // =====================================
+
+  const teacherMenuItems = [
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/dashboard",
+    },
+    {
+      name: "Assignments",
+      icon: ClipboardList,
+      path: "/teacher/assignments",
+    },
+  ];
+
+  // =====================================
+  // STUDENT MENU
+  // =====================================
 
   const studentMenuItems = [
     {
@@ -77,14 +111,23 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: ClipboardList,
       path: "/assignments",
     },
-    {
-      name: "Progress",
-      icon: BarChart3,
-      path: "/progress",
-    },
+    // {
+    //   name: "Progress",
+    //   icon: BarChart3,
+    //   path: "/progress",
+    // },
   ];
 
-  const menuItems = user?.role === "admin" ? adminMenuItems : studentMenuItems;
+  // =====================================
+  // SELECT MENU BASED ON USER ROLE
+  // =====================================
+
+  const menuItems =
+    user?.role === "admin"
+      ? adminMenuItems
+      : user?.role === "teacher"
+        ? teacherMenuItems
+        : studentMenuItems;
 
   return (
     <>
@@ -112,6 +155,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
 
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
           >
@@ -159,6 +203,7 @@ export default function Sidebar({ isOpen, onClose }) {
               Other
             </p>
 
+            {/* Settings */}
             <button
               type="button"
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
@@ -167,8 +212,8 @@ export default function Sidebar({ isOpen, onClose }) {
               <span>Settings</span>
             </button>
 
+            {/* Logout */}
             <div className="relative">
-              {/* Logout Button */}
               <button
                 type="button"
                 onClick={() => setLogoutMenuOpen((prev) => !prev)}
@@ -190,19 +235,24 @@ export default function Sidebar({ isOpen, onClose }) {
               {/* Logout Options */}
               {logoutMenuOpen && (
                 <div className="mt-1 rounded-lg border border-slate-200 bg-white p-1 shadow-md">
+                  {/* Logout Current Device */}
                   <button
                     type="button"
                     disabled={loggingOut}
                     onClick={async () => {
                       try {
                         setLoggingOut(true);
-                        localStorage.removeItem("user");
+                        setError("");
 
                         await logoutUser();
 
-                        router.push("/login");
+                        localStorage.removeItem("user");
+
+                        router.replace("/login");
                       } catch (error) {
-                        console.error(error);
+                        setError(
+                          error.response?.data?.message || "Failed to logout",
+                        );
                         setLoggingOut(false);
                       }
                     }}
@@ -211,19 +261,24 @@ export default function Sidebar({ isOpen, onClose }) {
                     {loggingOut ? "Logging out..." : "Logout"}
                   </button>
 
+                  {/* Logout All Devices */}
                   <button
                     type="button"
                     disabled={loggingOutAll}
                     onClick={async () => {
                       try {
                         setLoggingOutAll(true);
+                        setError("");
 
                         await logoutAll();
+
                         localStorage.removeItem("user");
 
-                        router.push("/login");
+                        router.replace("/login");
                       } catch (error) {
-                        console.error(error);
+                        setError(
+                          error.response?.data?.message || "Failed to logout",
+                        );
                         setLoggingOutAll(false);
                       }
                     }}

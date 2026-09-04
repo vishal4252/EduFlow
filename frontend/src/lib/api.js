@@ -11,36 +11,32 @@ const refreshClient = axios.create({
 });
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
+
   async (error) => {
     const originalRequest = error.config;
 
-    // Only try refresh when access token has expired
+    const isLoginRequest = originalRequest?.url?.includes("/auth/login");
+    const isRefreshRequest = originalRequest?.url?.includes(
+      "/auth/refresh-token",
+    );
+    const isLogoutRequest = originalRequest?.url?.includes("/auth/logout");
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/api/auth/refresh-token")
+      !isLoginRequest &&
+      !isRefreshRequest &&
+      !isLogoutRequest
     ) {
       originalRequest._retry = true;
 
       try {
-        // Get a new access token using refresh token cookie
         await refreshClient.post("/api/auth/refresh-token");
 
-        // Retry the original request
         return api(originalRequest);
-      } catch (refreshError) {
-        console.error("Session expired:", refreshError);
-
-        // Remove locally stored user information
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("user");
-          window.location.href = "/login";
-        }
-
-        return Promise.reject(refreshError);
+      } catch {
+        return Promise.reject(error);
       }
     }
 
