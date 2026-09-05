@@ -1,39 +1,26 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    type: "OAuth2",
-    user: process.env.GOOGLE_USER,
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Verify the connection configuration
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Error connecting to email server:", error);
-  } else {
-    console.log("Email server is ready to send messages");
-  }
-});
-
-// Function to send email
 exports.sendEmail = async (to, subject, text, html) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"EduFlow Support" <${process.env.GOOGLE_USER}>`, // sender address
-      to, // list of receivers
-      subject, // Subject line
-      text, // plain text body
-      html, // html body
+    const { data, error } = await resend.emails.send({
+      from: "EduFlow <onboarding@resend.dev>",
+      to,
+      subject,
+      text,
+      html,
     });
 
-    console.log("Message sent: %s", info.messageId);
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    if (error) {
+      console.error("Error sending email:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Email sent successfully:", data);
+    return data;
   } catch (error) {
     console.error("Error sending email:", error);
+    throw error;
   }
 };
