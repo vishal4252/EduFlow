@@ -13,14 +13,10 @@ exports.sendEmail = async (to, subject, text, html) => {
     });
 
     if (error) {
-      console.error("Error sending email:", error);
       throw new Error(error.message);
     }
-
-    console.log("Email sent successfully:", data);
     return data;
   } catch (error) {
-    console.error("Error sending email:", error);
     throw error;
   }
 };
