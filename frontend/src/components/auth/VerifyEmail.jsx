@@ -32,19 +32,29 @@ export default function VerifyEmail() {
     }
 
     setOtp(value);
+
+    // Clear previous error when user changes OTP
+    if (error) {
+      setError("");
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent duplicate verification requests
+    if (loading) return;
+
     setError("");
     setSuccess("");
 
+    // Check email
     if (!email) {
       setError("Email address is missing.");
       return;
     }
 
+    // Check OTP
     if (otp.length !== 6) {
       setError("Please enter a valid 6-digit OTP.");
       return;
@@ -60,6 +70,7 @@ export default function VerifyEmail() {
 
       setSuccess("Email verified successfully!");
 
+      // Keep loading state active while redirecting
       setTimeout(() => {
         router.push("/login");
       }, 1000);
@@ -68,7 +79,8 @@ export default function VerifyEmail() {
         error.response?.data?.message ||
           "Unable to verify OTP. Please try again.",
       );
-    } finally {
+
+      // Allow user to try again after an error
       setLoading(false);
     }
   };
@@ -77,9 +89,12 @@ export default function VerifyEmail() {
     <div className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl items-center justify-center">
         <div className="grid w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl lg:grid-cols-2">
-          {/* Left Section */}
+          {/* =========================
+              LEFT SECTION
+          ========================== */}
           <div className="hidden bg-slate-900 p-12 text-white lg:flex lg:flex-col lg:justify-between">
             <div>
+              {/* Logo */}
               <div className="mb-8 flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-xl font-bold text-slate-900">
                   E
@@ -88,10 +103,12 @@ export default function VerifyEmail() {
                 <span className="text-2xl font-bold">EduFlow</span>
               </div>
 
+              {/* Heading */}
               <h1 className="max-w-md text-4xl font-bold leading-tight">
                 One step away from starting your journey.
               </h1>
 
+              {/* Description */}
               <p className="mt-5 max-w-md text-slate-300">
                 Verify your email address to secure your account and continue
                 learning with EduFlow.
@@ -101,7 +118,9 @@ export default function VerifyEmail() {
             <p className="text-sm text-slate-400">Learn. Build. Grow.</p>
           </div>
 
-          {/* Right Section */}
+          {/* =========================
+              RIGHT SECTION
+          ========================== */}
           <div className="p-6 sm:p-10 lg:p-12">
             <div className="mx-auto max-w-md">
               {/* Mobile Logo */}
@@ -120,6 +139,7 @@ export default function VerifyEmail() {
                 <MailCheck size={28} className="text-slate-900" />
               </div>
 
+              {/* Heading */}
               <div className="mb-8">
                 <h2 className="text-3xl font-bold tracking-tight text-slate-900">
                   Verify your email
@@ -134,21 +154,29 @@ export default function VerifyEmail() {
                 </p>
               </div>
 
-              {/* Error */}
+              {/* =========================
+                  ERROR MESSAGE
+              ========================== */}
               {error && (
-                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-600">
                   {error}
                 </div>
               )}
 
-              {/* Success */}
+              {/* =========================
+                  SUCCESS MESSAGE
+              ========================== */}
               {success && (
-                <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-600">
+                <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm leading-5 text-green-600">
                   {success}
                 </div>
               )}
 
+              {/* =========================
+                  FORM
+              ========================== */}
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* OTP */}
                 <div>
                   <label
                     htmlFor="otp"
@@ -167,23 +195,42 @@ export default function VerifyEmail() {
                     onChange={handleChange}
                     placeholder="Enter 6-digit OTP"
                     maxLength={6}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-4 text-center text-xl font-semibold tracking-[0.5em] text-slate-900 placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+                    disabled={loading}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-4 text-center text-xl font-semibold tracking-[0.5em] text-slate-900 placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:cursor-not-allowed disabled:bg-slate-100"
                   />
+
+                  <p className="mt-2 text-xs text-slate-400">
+                    Enter the 6-digit code sent to your email.
+                  </p>
                 </div>
 
+                {/* Submit */}
                 <button
                   type="submit"
                   disabled={loading || otp.length !== 6}
-                  className="w-full rounded-xl bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {loading ? "Verifying..." : "Verify email"}
+                  {loading ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify email"
+                  )}
                 </button>
               </form>
 
+              {/* Back */}
               <div className="mt-8 text-center">
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+                  aria-disabled={loading}
+                  className={`inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900 ${
+                    loading
+                      ? "pointer-events-none cursor-not-allowed opacity-50"
+                      : ""
+                  }`}
                 >
                   <ArrowLeft size={16} />
                   Back to registration
