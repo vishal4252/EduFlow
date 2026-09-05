@@ -21,18 +21,6 @@ async function registerUser(req, res) {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const opt = generateOtp();
-    const optHtml = generateOtpHtml(opt);
-    const optHash = await bcrypt.hash(opt, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
-
-    await sendEmail(
-      email,
-      "OTP Verification for EduFlow",
-      `Your OTP code is ${opt}`,
-      optHtml,
-    );
-
     const user = await userModel.create({
       username,
       email,
@@ -40,12 +28,24 @@ async function registerUser(req, res) {
       role: "student",
     });
 
+    const opt = generateOtp();
+    const optHtml = generateOtpHtml(opt);
+    const optHash = await bcrypt.hash(opt, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+
     await otpModel.create({
       email,
       user: user._id,
       otp: optHash,
       expiresAt,
     });
+
+    await sendEmail(
+      email,
+      "OTP Verification for EduFlow",
+      `Your OTP code is ${opt}`,
+      optHtml,
+    );
 
     res.status(201).json({
       message: "User Register Successfully",
